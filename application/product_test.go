@@ -1,10 +1,10 @@
 package application_test
 
 import (
-	"testing"
 	"github.com/jonathanmdr/go-hexagonal/application"
-	"github.com/stretchr/testify/require"
 	uuid "github.com/satori/go.uuid"
+	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestProduct_Enable(t *testing.T) {
