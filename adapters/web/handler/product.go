@@ -2,25 +2,30 @@ package handler
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/jonathanmdr/go-hexagonal/adapters/web/dto"
 	"github.com/jonathanmdr/go-hexagonal/application"
+	"net/http"
 )
 
 func MakeProductHandlers(router *mux.Router, n *negroni.Negroni, service application.ProductServiceInterface) {
 	router.Handle("/products/{id}",
 		n.With(
-			negroni.Wrap(getProduct(service),
-		),
-	)).Methods("OPTIONS", "GET")
+			negroni.Wrap(getProduct(service)),
+		)).Methods("OPTIONS", "GET")
 	router.Handle("/products",
 		n.With(
-			negroni.Wrap(createProduct(service),
-		),
-	)).Methods("OPTIONS", "POST")
+			negroni.Wrap(createProduct(service)),
+		)).Methods("OPTIONS", "POST")
+	router.Handle("/products/{id}/enable",
+		n.With(
+			negroni.Wrap(enableProduct(service)),
+		)).Methods("OPTIONS", "PUT")
+	router.Handle("/products/{id}/disable",
+		n.With(
+			negroni.Wrap(disableProduct(service)),
+		)).Methods("OPTIONS", "PUT")
 }
 
 func getProduct(service application.ProductServiceInterface) http.Handler {
@@ -61,6 +66,62 @@ func createProduct(service application.ProductServiceInterface) http.Handler {
 				return
 			}
 			err = json.NewEncoder(response).Encode(product)
+			if err != nil {
+				response.WriteHeader(http.StatusInternalServerError)
+				response.Write(jsonError(err.Error()))
+				return
+			}
+		},
+	)
+}
+
+func enableProduct(service application.ProductServiceInterface) http.Handler {
+	return http.HandlerFunc(
+		func(response http.ResponseWriter, request *http.Request) {
+			response.Header().Set("Content-Type", "application/json")
+			vars := mux.Vars(request)
+			id := vars["id"]
+			product, err := service.Get(id)
+			if err != nil {
+				response.WriteHeader(http.StatusNotFound)
+				response.Write(jsonError(err.Error()))
+				return
+			}
+			result, err := service.Enable(product)
+			if err != nil {
+				response.WriteHeader(http.StatusInternalServerError)
+				response.Write(jsonError(err.Error()))
+				return
+			}
+			err = json.NewEncoder(response).Encode(result)
+			if err != nil {
+				response.WriteHeader(http.StatusInternalServerError)
+				response.Write(jsonError(err.Error()))
+				return
+			}
+		},
+	)
+}
+
+func disableProduct(service application.ProductServiceInterface) http.Handler {
+	return http.HandlerFunc(
+		func(response http.ResponseWriter, request *http.Request) {
+			response.Header().Set("Content-Type", "application/json")
+			vars := mux.Vars(request)
+			id := vars["id"]
+			product, err := service.Get(id)
+			if err != nil {
+				response.WriteHeader(http.StatusNotFound)
+				response.Write(jsonError(err.Error()))
+				return
+			}
+			result, err := service.Disable(product)
+			if err != nil {
+				response.WriteHeader(http.StatusInternalServerError)
+				response.Write(jsonError(err.Error()))
+				return
+			}
+			err = json.NewEncoder(response).Encode(result)
 			if err != nil {
 				response.WriteHeader(http.StatusInternalServerError)
 				response.Write(jsonError(err.Error()))
