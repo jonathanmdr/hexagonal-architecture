@@ -8,8 +8,8 @@ import (
 	"net/http"
 )
 
-func MakeProductHandlers(router *mux.Router, negroni *negroni.Negroni, service application.ProductServiceInterface) {
-	router.Handle("/product/{id}", negroni.With(
+func MakeProductHandlers(router *mux.Router, n *negroni.Negroni, service application.ProductServiceInterface) {
+	router.Handle("/product/{id}", n.With(
 		negroni.Wrap(getProduct(service)),
 	)).Methods("OPTIONS", "GET")
 }
