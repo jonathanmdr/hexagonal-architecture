@@ -48,12 +48,12 @@ func getProduct(service application.ProductServiceInterface) http.Handler {
 			id := vars["id"]
 			product, err := service.Get(id)
 			if err != nil {
-				response.WriteHeader(http.StatusNotFound)
+				hidrateError(response, err, http.StatusNotFound)
 				return
 			}
 			err = json.NewEncoder(response).Encode(product)
 			if err != nil {
-				response.WriteHeader(http.StatusInternalServerError)
+				hidrateError(response, err, http.StatusInternalServerError)
 				return
 			}
 		},
@@ -67,20 +67,17 @@ func createProduct(service application.ProductServiceInterface) http.Handler {
 			var productDto dto.Product
 			err := json.NewDecoder(request.Body).Decode(&productDto)
 			if err != nil {
-				response.WriteHeader(http.StatusInternalServerError)
-				response.Write(jsonError(err.Error()))
+				hidrateError(response, err, http.StatusInternalServerError)
 				return
 			}
 			product, err := service.Create(productDto.Name, productDto.Price)
 			if err != nil {
-				response.WriteHeader(http.StatusInternalServerError)
-				response.Write(jsonError(err.Error()))
+				hidrateError(response, err, http.StatusInternalServerError)
 				return
 			}
 			err = json.NewEncoder(response).Encode(product)
 			if err != nil {
-				response.WriteHeader(http.StatusInternalServerError)
-				response.Write(jsonError(err.Error()))
+				hidrateError(response, err, http.StatusInternalServerError)
 				return
 			}
 			response.WriteHeader(http.StatusCreated)
@@ -96,20 +93,17 @@ func enableProduct(service application.ProductServiceInterface) http.Handler {
 			id := vars["id"]
 			product, err := service.Get(id)
 			if err != nil {
-				response.WriteHeader(http.StatusNotFound)
-				response.Write(jsonError(err.Error()))
+				hidrateError(response, err, http.StatusNotFound)
 				return
 			}
 			result, err := service.Enable(product)
 			if err != nil {
-				response.WriteHeader(http.StatusInternalServerError)
-				response.Write(jsonError(err.Error()))
+				hidrateError(response, err, http.StatusInternalServerError)
 				return
 			}
 			err = json.NewEncoder(response).Encode(result)
 			if err != nil {
-				response.WriteHeader(http.StatusInternalServerError)
-				response.Write(jsonError(err.Error()))
+				hidrateError(response, err, http.StatusInternalServerError)
 				return
 			}
 		},
@@ -124,22 +118,24 @@ func disableProduct(service application.ProductServiceInterface) http.Handler {
 			id := vars["id"]
 			product, err := service.Get(id)
 			if err != nil {
-				response.WriteHeader(http.StatusNotFound)
-				response.Write(jsonError(err.Error()))
+				hidrateError(response, err, http.StatusNotFound)
 				return
 			}
 			result, err := service.Disable(product)
 			if err != nil {
-				response.WriteHeader(http.StatusInternalServerError)
-				response.Write(jsonError(err.Error()))
+				hidrateError(response, err, http.StatusInternalServerError)
 				return
 			}
 			err = json.NewEncoder(response).Encode(result)
 			if err != nil {
-				response.WriteHeader(http.StatusInternalServerError)
-				response.Write(jsonError(err.Error()))
+				hidrateError(response, err, http.StatusInternalServerError)
 				return
 			}
 		},
 	)
+}
+
+func hidrateError(response http.ResponseWriter, err error, httpStatus int) {
+	response.WriteHeader(httpStatus)
+	response.Write(jsonError(err.Error()))
 }
