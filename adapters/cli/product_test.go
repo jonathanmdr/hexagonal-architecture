@@ -62,4 +62,9 @@ func TestRun(t *testing.T) {
 	actual, err = cli.Run(serviceMock, "get", productId, "", 0)
 	require.Nil(t, err)
 	require.Equal(t, expected, actual)
+
+	expected = fmt.Sprintf("The operation '%s' doesn't a valid command", "other")
+	actual, err = cli.Run(serviceMock, "other", "", "", 0)
+	require.Nil(t, err)
+	require.Equal(t, expected, actual)
 }
